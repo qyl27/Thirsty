@@ -2,17 +2,19 @@ package cx.rain.mc.forgemod.thirsty.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import cx.rain.mc.forgemod.thirsty.Thirsty;
+import cx.rain.mc.forgemod.thirsty.api.capability.IThirstyCapability;
+import cx.rain.mc.forgemod.thirsty.capability.Capabilities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.gui.ForgeIngameGui;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.common.util.LazyOptional;
 
-@Mod.EventBusSubscriber(modid = Thirsty.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class ScreenThirstBar extends Screen {
     public static final ResourceLocation THIRST_BAR =
             new ResourceLocation(Thirsty.MODID, "textures/gui/hud_sprite.png");
@@ -21,24 +23,40 @@ public class ScreenThirstBar extends Screen {
         super(new StringTextComponent("thirst_bar"));
     }
 
-    @SubscribeEvent
-    public void onRenderGameOverlay(RenderGameOverlayEvent event) {
-        Minecraft mc = Minecraft.getInstance();
-        PlayerEntity player = mc.player;
+    public void render(RenderGameOverlayEvent event, Minecraft mc, PlayerEntity player) {
+        LazyOptional<IThirstyCapability> thirstyOriginal = player.getCapability(Capabilities.THIRSTY);
+        AtomicInteger thirstyAtom = new AtomicInteger();
+        thirstyOriginal.ifPresent(thitsry -> {
+            thirstyAtom.set(MathHelper.ceil(thitsry.getThirsty()));
+        });
 
-        if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
-            mc.getProfiler().startSection("thirst_bar_section");
-            //renderThirstBar(event, mc, player);
-            mc.getProfiler().endSection();
-        }
-    }
+        mc.getProfiler().startSection("thirsty");
 
-    private void renderThirstBar(RenderGameOverlayEvent event, Minecraft mc, PlayerEntity player) {
+        int thirsty = thirstyAtom.get();
+        int startX = event.getWindow().getScaledWidth() / 2 - 91;
+        int startY = event.getWindow().getScaledHeight() - 39;
+        int actualY = startY - 10;
+
         RenderSystem.enableBlend();
         RenderSystem.color4f(1, 1, 1, 1);
         mc.textureManager.bindTexture(THIRST_BAR);
-        for (int i = 0;i < 10;i++) {
+
+        for(int i = 0; i < 10; ++i) {
+            int actualX = startX + i * 8;
+            if (i * 2 + 1 < thirsty) {
+                renderThirstBarCell(actualX, actualY, false, true);
+            }
+
+            if (i * 2 + 1 == thirsty) {
+                renderThirstBarCell(actualX, actualY, true, false);
+            }
+
+            if (i * 2 + 1 > thirsty) {
+                renderThirstBarCell(actualX, actualY, false, false);
+            }
         }
+
+        mc.getProfiler().endSection();
     }
 
     private void renderThirstBarCell(int x, int y, boolean isHalf, boolean isEmpty) {

@@ -11,7 +11,7 @@ public class ThirstyCapability implements IThirstyCapability {
     }
 
     @Override
-    public int getThirsty() {
+    public double getThirsty() {
         return thirsty;
     }
 

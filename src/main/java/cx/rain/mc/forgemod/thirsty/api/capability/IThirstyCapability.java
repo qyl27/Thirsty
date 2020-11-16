@@ -4,6 +4,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.common.util.INBTSerializable;
 
 public interface IThirstyCapability extends INBTSerializable<CompoundNBT> {
-    int getThirsty();
+    double getThirsty();
     void setThirsty(int thirstyIn);
 }
