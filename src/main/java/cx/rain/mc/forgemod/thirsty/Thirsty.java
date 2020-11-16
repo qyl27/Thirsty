@@ -1,9 +1,14 @@
 package cx.rain.mc.forgemod.thirsty;
 
+import cx.rain.mc.forgemod.thirsty.api.capability.IThirstyCapability;
 import cx.rain.mc.forgemod.thirsty.block.BlockItems;
 import cx.rain.mc.forgemod.thirsty.block.Blocks;
 import cx.rain.mc.forgemod.thirsty.item.Items;
-import net.minecraft.item.Item;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.util.Direction;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -35,6 +40,26 @@ public class Thirsty {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
+        CapabilityManager.INSTANCE.register(IThirstyCapability.class,
+                new Capability.IStorage<IThirstyCapability>() {
+                    @Override
+                    public INBT writeNBT(Capability<IThirstyCapability> capability, IThirstyCapability instance, Direction side) {
+                        CompoundNBT nbt = new CompoundNBT();
+                        nbt.putInt("thirsty", 20);
+                        return nbt;
+                    }
+
+                    @Override
+                    public void readNBT(Capability<IThirstyCapability> capability, IThirstyCapability instance, Direction side, INBT nbt) {
+                        CompoundNBT compound = (CompoundNBT) nbt;
+                        int thirsty = compound.getInt("thirsty");
+                        instance.setThirsty(thirsty);
+                    }
+                },
+                () -> {
+                    return null;
+                });
+
         log.info("Hello, Minecraft!");
     }
 
